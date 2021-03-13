@@ -11,6 +11,7 @@ class App:
     def __init__(self):
         self.__window = self.__init_window()
         self.__delta_time = DELTA_TIME
+        self.__is_holding_mouse = False
 
         spawn = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
         spawn_panel = pygame.transform.scale(pygame.image.load("res/Spawn_Panel.png"), (WINDOW_WIDTH, 440))
@@ -26,7 +27,7 @@ class App:
                 bound = Bound((spawn_x + COLLIDER_OFFSET_X, spawn_y), (spawn_x + COLLIDER_WIDTH + COLLIDER_OFFSET_X, spawn_y + COLLIDER_HEIGHT))
                 self.__spawn_bounds.append(bound)
                 self.__window.blit(spawn, (spawn_x, spawn_y))
-                pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2)
+                # pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2) # Visualize Colliders
 
         self.__init_UI()
         self.__game_loop()
@@ -61,17 +62,34 @@ class App:
                 if event.type == pygame.QUIT:
                     isRunning = False
 
-                if (pygame.mouse.get_visible()):
-                    mouse_pos = pygame.mouse.get_pos()
-                    for bound in self.__spawn_bounds:
-                        if mouse_pos[0] >= bound.min[0] and mouse_pos[0] <= bound.max[0] and \
-                            mouse_pos[1] >= bound.min[1] and mouse_pos[1] <= bound.max[1]:
-                            print("Hit zombie at: " + str(bound.min))
-                            break
+                self.__handle_input(event)   
 
             pygame.display.update()        
 
-        pygame.quit()	
+        pygame.quit()
+
+    def __handle_input(self, event):
+        if not pygame.mouse.get_visible():
+            return
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.__is_holding_mouse = False
+
+        if self.__is_holding_mouse:
+            return
+
+        if event.type != pygame.MOUSEBUTTONDOWN:
+            return
+
+        self.__is_holding_mouse = True 
+
+        mouse_pos = pygame.mouse.get_pos()
+        is_colliding = lambda input_pos, hit_box_bound, idx: mouse_pos[idx] >= bound.min[idx] and mouse_pos[idx] <= bound.max[idx]
+        
+        for bound in self.__spawn_bounds:
+            if is_colliding(mouse_pos, bound, 0) and is_colliding(mouse_pos, bound, 1):
+                print("Hit zombie at: " + str(bound.min))
+                return
 
 if __name__ == "__main__":
     App()
