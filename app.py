@@ -2,20 +2,31 @@ import pygame
 from config import *
 from UI import bind
 
+class Bound:
+    def __init__(self, min: (int, int), max):
+        self.min = min
+        self.max = max
+
 class App:
     def __init__(self):
         self.__window = self.__init_window()
         self.__delta_time = DELTA_TIME
+
         spawn = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
         spawn_panel = pygame.transform.scale(pygame.image.load("res/Spawn_Panel.png"), (WINDOW_WIDTH, 440))
-
         self.__window.blit(spawn_panel, (0, 160))
 
+        COLLIDER_OFFSET_X = 25
+        COLLIDER_WIDTH = 110
+        COLLIDER_HEIGHT = 130
+        self.__spawn_bounds = []
         for row in range(N_ROWS):
             for col in range(N_COLS): 
-                self.__window.blit(spawn, (SPAWN_PADDING_WIDTH + (SPAWN_PADDING_WIDTH + SPAWN_SIDE_LEN) * col, SPAWN_SIDE_LEN + SPAWN_SIDE_LEN * row))
-
-        # pygame.draw.rect(self.__window, (255, 0, 0), (30, 160, 160, 160), 2)
+                spawn_x, spawn_y = (SPAWN_PADDING_WIDTH + (SPAWN_PADDING_WIDTH + SPAWN_SIDE_LEN) * col, SPAWN_SIDE_LEN + SPAWN_SIDE_LEN * row)
+                bound = Bound((spawn_x + COLLIDER_OFFSET_X, spawn_y), (spawn_x + COLLIDER_WIDTH + COLLIDER_OFFSET_X, spawn_y + COLLIDER_HEIGHT))
+                self.__spawn_bounds.append(bound)
+                self.__window.blit(spawn, (spawn_x, spawn_y))
+                pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2)
 
         self.__init_UI()
         self.__game_loop()
@@ -51,7 +62,12 @@ class App:
                     isRunning = False
 
                 if (pygame.mouse.get_visible()):
-                    print(pygame.mouse.get_pos())
+                    mouse_pos = pygame.mouse.get_pos()
+                    for bound in self.__spawn_bounds:
+                        if mouse_pos[0] >= bound.min[0] and mouse_pos[0] <= bound.max[0] and \
+                            mouse_pos[1] >= bound.min[1] and mouse_pos[1] <= bound.max[1]:
+                            print("Hit zombie at: " + str(bound.min))
+                            break
 
             pygame.display.update()        
 
