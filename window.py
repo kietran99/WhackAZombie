@@ -93,6 +93,7 @@ class Window:
         self.__window.fill((0))
         self.__window.blit(self.__spawn_panel, (0, 160))
         self.__spawn_manager.render_spawners()
+        self.__spawn_manager.render_indicator(pygame.mouse.get_pos())
         self.__render_UI()  
 
     def __render_UI(self):
