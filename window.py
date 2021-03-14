@@ -12,6 +12,7 @@ class Window:
         self.__spawn_sprite = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
         self.__spawn_panel = pygame.transform.scale(pygame.image.load("res/Spawn_Panel.png"), (WINDOW_WIDTH, 440))
         self.__spawn_manager = SpawnManager(self.__init_spawns())
+        self.__time_since_spawn = 0
         self.__update()
 
     def __init_window(self):
@@ -32,9 +33,9 @@ class Window:
         for row in range(N_ROWS):
             for col in range(N_COLS): 
                 spawn_x, spawn_y = (SPAWN_PADDING_WIDTH + (SPAWN_PADDING_WIDTH + SPAWN_SIDE_LEN) * col, SPAWN_SIDE_LEN + SPAWN_SIDE_LEN * row)
-                spawn = Spawn((spawn_x, spawn_y), (spawn_x + COLLIDER_OFFSET_X, spawn_y), (spawn_x + COLLIDER_WIDTH + COLLIDER_OFFSET_X, spawn_y + COLLIDER_HEIGHT))
+                spawn = Spawner((spawn_x, spawn_y), (spawn_x + COLLIDER_OFFSET_X, spawn_y), (spawn_x + COLLIDER_WIDTH + COLLIDER_OFFSET_X, spawn_y + COLLIDER_HEIGHT))
                 spawns.append(spawn)
-                # pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2) # Visualize Colliders
+                # pygame.draw.rect(self.__window, (255, 255, 255), (spawn_x, spawn_y, COLLIDER_WIDTH, COLLIDER_HEIGHT), 2) # Visualize Colliders
         return spawns
 
     def __update(self):
@@ -42,12 +43,18 @@ class Window:
 
         while isRunning:
             pygame.time.delay(self.__delta_time)
+            self.__time_since_spawn += self.__delta_time
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     isRunning = False
 
                 self.__handle_input(event)   
+
+            if (self.__time_since_spawn >= SPAWN_INTERVAL):
+                print("Spawn")
+                self.__spawn_manager.random_spawn()
+                self.__time_since_spawn = 0
 
             self.__render()
             pygame.display.update()        
@@ -86,12 +93,14 @@ class Window:
 
     def __render(self):
         self.__window.fill((0))
-        self.__render_spawner()
+        self.__window.blit(self.__spawn_panel, (0, 160))
+        self.__spawn_manager.render_spawners(self.__render_spawns)
         self.__render_UI()  
 
-    def __render_spawner(self):
-        self.__window.blit(self.__spawn_panel, (0, 160))
-        self.__spawn_manager.render_spawns(lambda spawn: self.__window.blit(self.__spawn_sprite, (spawn.pos[0], spawn.pos[1])))
+    def __render_spawns(self, spawner: Spawner):
+        self.__window.blit(self.__spawn_sprite, (spawner.pos[0], spawner.pos[1]))
+        if spawner.whackable:
+            pygame.draw.rect(self.__window, (255, 255, 255), (spawner.pos[0], spawner.pos[1], 160, 160))
 
     def __render_UI(self):
         self.__render_text = bind(self.__window, pygame.font.Font(FONT_PATH, FONT_SIZE))
@@ -104,7 +113,7 @@ class Window:
         self.__render_text("MISSES", self.__misses_color, (70, PADDING_UI_TOP))
         self.__render_text(str(self.__current_misses), self.__misses_color, (50, PADDING_UI_TOP * 2))
         self.__render_large_text("TIME LEFT", self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP))
-        self.__render_large_text("02:00", self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP * 2.4))
+        self.__render_large_text("02:00", self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP * 2.4)) 
 
     def __update_score(self, score_to_add):
         self.__current_score += score_to_add
