@@ -35,7 +35,10 @@ class Spawner:
 
     def hit(self, hit_pos) -> HitInfo:
         is_colliding = self.__is_in_bound(hit_pos, 0) and self.__is_in_bound(hit_pos, 1)
-        return HitInfo(is_colliding, 10 if self.__whackable else 0)
+        whackable = self.__whackable
+        if is_colliding: # delete zombie if hit
+            self.__whackable = False
+        return HitInfo(is_colliding, 10 if whackable else 0)
 
     def __is_in_bound(self, input_pos: (int, int), idx: int) -> bool:
         return input_pos[idx] >= self.__min_collider_bound[idx] and input_pos[idx] <= self.__max_collider_bound[idx]
