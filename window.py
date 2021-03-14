@@ -58,18 +58,18 @@ class Window:
 
         self.__hit(pygame.mouse.get_pos())
 
-    def __hit(self, mouse_pos):
-        for spawn in self.__spawns:
-            hit_info = spawn.hit(mouse_pos)
-            if hit_info.hit:
-                if not hit_info.score:
-                    print("Missed")
-                    self.__update_misses(1)
-                    break
+    def __hit(self, mouse_pos):      
+        hit_info = self.__spawn_manager.hit(mouse_pos)
+        if not hit_info.hit:
+            return
 
-                print("Hit zombie at: " + str(spawn.min))
-                self.__update_score(10)
-                break
+        if not hit_info.score:
+            print("Missed")
+            self.__update_misses(1)
+            return
+
+        print("Hit")
+        self.__update_score(10)
 
     def __render(self):
         self.__window.fill((0))
@@ -88,7 +88,8 @@ class Window:
                 self.__spawns.append(bound)
                 self.__window.blit(spawn, (spawn_x, spawn_y))
                 # pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2) # Visualize Colliders
-        
+        self.__spawn_manager = SpawnManager(self.__spawns)
+
         self.__render_UI()  
 
     def __render_UI(self):
