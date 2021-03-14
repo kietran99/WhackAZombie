@@ -9,6 +9,9 @@ class Window:
         self.__delta_time = DELTA_TIME
         self.__is_holding_mouse = False  
         self.__reset()
+        self.__spawn_sprite = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
+        self.__spawn_panel = pygame.transform.scale(pygame.image.load("res/Spawn_Panel.png"), (WINDOW_WIDTH, 440))
+        self.__spawn_manager = SpawnManager(self.__init_spawns())
         self.__update()
 
     def __init_window(self):
@@ -23,6 +26,16 @@ class Window:
 
     def __min_to_mil_sec(self, min):
         return min * 60000
+
+    def __init_spawns(self):
+        spawns = []
+        for row in range(N_ROWS):
+            for col in range(N_COLS): 
+                spawn_x, spawn_y = (SPAWN_PADDING_WIDTH + (SPAWN_PADDING_WIDTH + SPAWN_SIDE_LEN) * col, SPAWN_SIDE_LEN + SPAWN_SIDE_LEN * row)
+                spawn = Spawn((spawn_x, spawn_y), (spawn_x + COLLIDER_OFFSET_X, spawn_y), (spawn_x + COLLIDER_WIDTH + COLLIDER_OFFSET_X, spawn_y + COLLIDER_HEIGHT))
+                spawns.append(spawn)
+                # pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2) # Visualize Colliders
+        return spawns
 
     def __update(self):
         isRunning = True
@@ -73,24 +86,12 @@ class Window:
 
     def __render(self):
         self.__window.fill((0))
-        spawn = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
-        spawn_panel = pygame.transform.scale(pygame.image.load("res/Spawn_Panel.png"), (WINDOW_WIDTH, 440))
-        self.__window.blit(spawn_panel, (0, 160))
-
-        COLLIDER_OFFSET_X = 25
-        COLLIDER_WIDTH = 110
-        COLLIDER_HEIGHT = 130
-        self.__spawns = []
-        for row in range(N_ROWS):
-            for col in range(N_COLS): 
-                spawn_x, spawn_y = (SPAWN_PADDING_WIDTH + (SPAWN_PADDING_WIDTH + SPAWN_SIDE_LEN) * col, SPAWN_SIDE_LEN + SPAWN_SIDE_LEN * row)
-                bound = Spawn((spawn_x + COLLIDER_OFFSET_X, spawn_y), (spawn_x + COLLIDER_WIDTH + COLLIDER_OFFSET_X, spawn_y + COLLIDER_HEIGHT))
-                self.__spawns.append(bound)
-                self.__window.blit(spawn, (spawn_x, spawn_y))
-                # pygame.draw.rect(self.__window, (255, 255, 255), (bound.min[0], bound.min[1], COLLIDER_WIDTH, COLLIDER_HEIGHT), 2) # Visualize Colliders
-        self.__spawn_manager = SpawnManager(self.__spawns)
-
+        self.__render_spawner()
         self.__render_UI()  
+
+    def __render_spawner(self):
+        self.__window.blit(self.__spawn_panel, (0, 160))
+        self.__spawn_manager.render_spawns(lambda spawn: self.__window.blit(self.__spawn_sprite, (spawn.pos[0], spawn.pos[1])))
 
     def __render_UI(self):
         self.__render_text = bind(self.__window, pygame.font.Font(FONT_PATH, FONT_SIZE))
