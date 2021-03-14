@@ -9,9 +9,8 @@ class Window:
         self.__delta_time = DELTA_TIME
         self.__is_holding_mouse = False  
         self.__reset()
-        self.__spawn_sprite = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
         self.__spawn_panel = pygame.transform.scale(pygame.image.load("res/Spawn_Panel.png"), (WINDOW_WIDTH, 440))
-        self.__spawn_manager = SpawnManager(self.__init_spawns())
+        self.__spawn_manager = SpawnManager(self.__window, self.__init_spawns())
         self.__time_since_spawn = 0
         self.__update()
 
@@ -40,7 +39,6 @@ class Window:
 
     def __update(self):
         isRunning = True
-
         while isRunning:
             pygame.time.delay(self.__delta_time)
             self.__time_since_spawn += self.__delta_time
@@ -94,13 +92,8 @@ class Window:
     def __render(self):
         self.__window.fill((0))
         self.__window.blit(self.__spawn_panel, (0, 160))
-        self.__spawn_manager.render_spawners(self.__render_spawns)
+        self.__spawn_manager.render_spawners()
         self.__render_UI()  
-
-    def __render_spawns(self, spawner: Spawner):
-        self.__window.blit(self.__spawn_sprite, (spawner.pos[0], spawner.pos[1]))
-        if spawner.whackable:
-            pygame.draw.rect(self.__window, (255, 255, 255), (spawner.pos[0], spawner.pos[1], 160, 160))
 
     def __render_UI(self):
         self.__render_text = bind(self.__window, pygame.font.Font(FONT_PATH, FONT_SIZE))

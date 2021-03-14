@@ -1,6 +1,8 @@
 import pygame
 from random import randint
 
+from config import *
+
 COLLIDER_OFFSET_X = 25
 COLLIDER_WIDTH = 110
 COLLIDER_HEIGHT = 130
@@ -39,14 +41,20 @@ class Spawner:
         return input_pos[idx] >= self.__min_collider_bound[idx] and input_pos[idx] <= self.__max_collider_bound[idx]
 
 class SpawnManager:
-    def __init__(self, spawns: list[Spawner]):
-        self.__spawns = spawns
+    def __init__(self, window, spawners: list[Spawner]):
+        self.__window = window
+        self.__spawn_sprite = pygame.transform.scale(pygame.image.load("res/Zombie_Spawn.png"), (SPAWN_SIDE_LEN, SPAWN_SIDE_LEN))
+        self.__zombie_sprite = pygame.transform.scale(pygame.image.load("res/Regular_Zombie.png"), (160, 160))
+        self.__spawners = spawners
 
-    def render_spawners(self, render_fn):
-        [render_fn(spawn) for spawn in self.__spawns]
+    def render_spawners(self):
+        for spawner in self.__spawners:
+            self.__window.blit(self.__spawn_sprite, (spawner.pos[0], spawner.pos[1]))
+            if spawner.whackable:
+                self.__window.blit(self.__zombie_sprite, (spawner.pos[0], spawner.pos[1] - 34))
 
     def hit(self, hit_pos: tuple[int, int]) -> HitInfo:
-        return self.__hit(hit_pos, self.__spawns)
+        return self.__hit(hit_pos, self.__spawners)
 
     def __hit(self, hit_pos: tuple[int, int], spawns: list[Spawner]) -> HitInfo:
         if not spawns:
@@ -59,6 +67,6 @@ class SpawnManager:
         return self.__hit(hit_pos, spawns[1:])
 
     def random_spawn(self):
-        [spawn.shift_unhittable_state() for spawn in self.__spawns]
-        rand_idx = randint(0, len(self.__spawns) - 1)
-        self.__spawns[rand_idx].shift_hittable_state()
+        [spawn.shift_unhittable_state() for spawn in self.__spawners]
+        rand_idx = randint(0, len(self.__spawners) - 1)
+        self.__spawners[rand_idx].shift_hittable_state()
