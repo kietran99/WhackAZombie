@@ -2,6 +2,7 @@ import pygame
 from config import *
 from UI import bind
 from spawn import *
+from pygame import mixer
 
 class Window:
     def __init__(self):
@@ -89,6 +90,8 @@ class Window:
             return
 
         print("Hit")
+        bonk = mixer.Sound('res/Bonk.mp3')
+        bonk.play()
         self.__update_score(10)
 
     def __render(self):
