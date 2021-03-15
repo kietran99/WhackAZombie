@@ -13,7 +13,7 @@ class Window:
         self.__spawn_manager = SpawnManager(self.__window, self.__init_spawns())
         self.__time_since_spawn = 0
         self.__update()
-
+        
     def __init_window(self):
         pygame.init()
         pygame.display.set_caption("Whack-a-Zombie")
@@ -22,7 +22,7 @@ class Window:
     def __reset(self):
         self.__current_score = 0
         self.__current_misses = 0
-        self.__time_left = self.__min_to_mil_sec(2) 
+        self.__time_left = self.__min_to_mil_sec(GAME_TIME_IN_MIN) 
 
     def __min_to_mil_sec(self, min):
         return min * 60000
@@ -42,7 +42,9 @@ class Window:
         while isRunning:
             pygame.time.delay(self.__delta_time)
             self.__time_since_spawn += self.__delta_time
-
+            self.__time_left = self.__min_to_mil_sec(GAME_TIME_IN_MIN) - pygame.time.get_ticks()
+            if(self.__time_left <= 0):
+                isRunning = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     isRunning = False
@@ -55,7 +57,7 @@ class Window:
                 self.__time_since_spawn = 0
 
             self.__render()
-            pygame.display.update()        
+            pygame.display.update() 
 
         pygame.quit()
 
@@ -107,7 +109,18 @@ class Window:
         self.__render_text("MISSES", self.__misses_color, (70, PADDING_UI_TOP))
         self.__render_text(str(self.__current_misses), self.__misses_color, (50, PADDING_UI_TOP * 2))
         self.__render_large_text("TIME LEFT", self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP))
-        self.__render_large_text("02:00", self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP * 2.4)) 
+        # self.__render_large_text(str(int(self.__time_left/60000))+":"+str(int((self.__time_left%60000)/1000)), self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP * 2.4)) 
+        self.__render_large_text(self.__time_split(self.__time_left), self.__time_color, (WINDOW_WIDTH // 2, PADDING_LARGE_UI_TOP * 2.4)) 
+
+
+    def __time_split(self, time):
+        min = int(time/60000)
+        sec = int(time%60000/1000)
+        strmin = str(min)
+        strsec = str(sec)
+        if(min < 10): strmin = "0"+str(min)
+        if(sec < 10): strsec = "0"+str(sec)
+        return strmin+":"+strsec
 
     def __update_score(self, score_to_add):
         self.__current_score += score_to_add
